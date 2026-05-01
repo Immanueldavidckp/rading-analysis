@@ -107,8 +107,8 @@ async def startup_event():
         print(f"User ID: {user_id}")
         print(f"TOTP Generated: {totp}")
 
-        # --- RAW TEST (With Headers) ---
-        print("Running Raw Connection Test (with Headers)...")
+        # --- RAW TEST (Form Data) ---
+        print("Running Raw Connection Test (Form Data)...")
         raw_url = "https://api.shoonya.com/NorenWClientTP/QuickLogon"
         payload = {
             "apkversion": "1.0.0",
@@ -124,7 +124,8 @@ async def startup_event():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         try:
-            raw_res = requests.post(raw_url, data=f"jData={json.dumps(payload)}", headers=headers, timeout=10)
+            # Sending as a dictionary 'data' makes requests use application/x-www-form-urlencoded
+            raw_res = requests.post(raw_url, data={'jData': json.dumps(payload)}, headers=headers, timeout=10)
             print(f"Raw HTTP Status: {raw_res.status_code}")
             print(f"Raw Response Text: {raw_res.text}")
         except Exception as re:
