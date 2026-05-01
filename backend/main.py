@@ -50,10 +50,6 @@ class ShoonyaApiPy(NorenApi):
     def __init__(self):
         # Reverting to the official API domain
         NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
-        # Set a User-Agent to avoid 502/Bot blocks
-        self._session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        })
 
 api = ShoonyaApiPy()
 
