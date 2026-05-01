@@ -48,8 +48,8 @@ loop = asyncio.get_event_loop()
 # Initialize Shoonya API
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
-        # Reverting to the official API domain
-        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
+        # Switching to the new API endpoint discovered via browser check
+        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientAPI/', websocket='wss://api.shoonya.com/NorenWSTP/')
 
 api = ShoonyaApiPy()
 
@@ -107,9 +107,10 @@ async def startup_event():
         print(f"User ID: {user_id}")
         print(f"TOTP Generated: {totp}")
 
-        # --- RAW TEST (Form Data) ---
-        print("Running Raw Connection Test (Form Data)...")
-        raw_url = "https://api.shoonya.com/NorenWClientTP/QuickLogon"
+        # --- RAW TEST (New API Endpoint) ---
+        print("Running Raw Connection Test (NorenWClientAPI)...")
+        # Testing QuickLogon on the new base URL
+        raw_url = "https://api.shoonya.com/NorenWClientAPI/QuickLogon"
         payload = {
             "apkversion": "1.0.0",
             "uid": user_id,
@@ -124,7 +125,6 @@ async def startup_event():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         try:
-            # Sending as a dictionary 'data' makes requests use application/x-www-form-urlencoded
             raw_res = requests.post(raw_url, data={'jData': json.dumps(payload)}, headers=headers, timeout=10)
             print(f"Raw HTTP Status: {raw_res.status_code}")
             print(f"Raw Response Text: {raw_res.text}")
