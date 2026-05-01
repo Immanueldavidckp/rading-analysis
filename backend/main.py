@@ -48,8 +48,12 @@ loop = asyncio.get_event_loop()
 # Initialize Shoonya API
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
-        # Trying the alternative Finvasia domain which is sometimes more stable
-        NorenApi.__init__(self, host='https://shoonya.finvasia.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
+        # Reverting to the official API domain
+        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
+        # Set a User-Agent to avoid 502/Bot blocks
+        self._session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
 
 api = ShoonyaApiPy()
 
@@ -107,9 +111,9 @@ async def startup_event():
         print(f"User ID: {user_id}")
         print(f"TOTP Generated: {totp}")
 
-        # --- RAW TEST (Alternative Endpoint) ---
-        print("Running Raw Connection Test (Alternative)...")
-        raw_url = "https://shoonya.finvasia.com/NorenWClientTP/QuickLogon"
+        # --- RAW TEST (With Headers) ---
+        print("Running Raw Connection Test (with Headers)...")
+        raw_url = "https://api.shoonya.com/NorenWClientTP/QuickLogon"
         payload = {
             "apkversion": "1.0.0",
             "uid": user_id,
@@ -120,8 +124,11 @@ async def startup_event():
             "imei": os.getenv('IMEI'),
             "source": "API"
         }
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
         try:
-            raw_res = requests.post(raw_url, data=f"jData={json.dumps(payload)}", timeout=10)
+            raw_res = requests.post(raw_url, data=f"jData={json.dumps(payload)}", headers=headers, timeout=10)
             print(f"Raw HTTP Status: {raw_res.status_code}")
             print(f"Raw Response Text: {raw_res.text}")
         except Exception as re:
