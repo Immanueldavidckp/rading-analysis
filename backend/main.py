@@ -106,7 +106,7 @@ async def startup_event():
             password=os.getenv('PASSWORD'),
             twoFA=totp,
             vendor_code=os.getenv('VENDOR_CODE'),
-            api_secret=os.getenv('API_KEY'),
+            api_secret=os.getenv('API_SECRET'),
             imei=os.getenv('IMEI')
         )
         if ret and ret.get('stat') == 'Ok':
