@@ -1,0 +1,7 @@
+fastapi==0.135.2
+uvicorn==0.42.0
+pyotp==2.9.0
+python-dotenv==1.2.2
+NorenRestApiPy==0.0.22
+requests==2.33.1
+websockets==16.0
