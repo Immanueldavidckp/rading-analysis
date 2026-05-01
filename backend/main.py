@@ -6,6 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from NorenRestApiPy.NorenApi import NorenApi
+from datetime import datetime
 
 load_dotenv()
 
@@ -69,7 +70,6 @@ class SessionTracker:
         return self.data[token]
 
 tracker = SessionTracker()
-from datetime import datetime
 
 # --- Shoonya Callbacks ---
 def on_feed(data):
@@ -101,6 +101,11 @@ async def startup_event():
 
     try:
         totp = pyotp.TOTP(totp_secret).now()
+        print(f"--- Debug: Attempting Login ---")
+        print(f"User ID: {user_id}")
+        print(f"Vendor Code: {os.getenv('VENDOR_CODE')}")
+        print(f"TOTP: {totp}")
+        
         ret = api.login(
             userid=user_id,
             password=os.getenv('PASSWORD'),
@@ -109,22 +114,26 @@ async def startup_event():
             api_secret=os.getenv('API_SECRET'),
             imei=os.getenv('IMEI')
         )
-        if ret and ret.get('stat') == 'Ok':
+        
+        print(f"Shoonya Response: {ret}")
+        
+        if ret and isinstance(ret, dict) and ret.get('stat') == 'Ok':
             print("✅ Shoonya Login Successful!")
             api.is_connected = True
             api.start_websocket(order_update_callback=None, subscribe_callback=on_feed, socket_open_callback=on_open)
         else:
-            print("❌ Login Failed:", ret)
+            status = ret.get('stat') if isinstance(ret, dict) else 'Non-JSON Response'
+            print(f"❌ Login Failed. Status: {status}")
             api.is_connected = False
     except Exception as e:
-        print("❌ Login Error:", e)
+        print(f"❌ Login Error Exception: {e}")
         api.is_connected = False
 
 @app.get("/api/health")
 def health_check():
     if getattr(api, 'is_connected', False):
         return {"status": "Live Market Connected"}
-    return {"status": "Waiting for Login", "error": "Ensure USER_ID, PASSWORD, and TOTP_SECRET are set in .env"}
+    return {"status": "Waiting for Login", "error": "Ensure credentials are correct in .env"}
 
 # --- WebSocket Route ---
 @app.websocket("/ws")
