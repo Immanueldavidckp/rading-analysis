@@ -48,8 +48,8 @@ loop = asyncio.get_event_loop()
 # Initialize Shoonya API
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
-        # Most Shoonya accounts use the TP URL
-        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
+        # Trying the alternative Finvasia domain which is sometimes more stable
+        NorenApi.__init__(self, host='https://shoonya.finvasia.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
 
 api = ShoonyaApiPy()
 
@@ -107,21 +107,20 @@ async def startup_event():
         print(f"User ID: {user_id}")
         print(f"TOTP Generated: {totp}")
 
-        # --- RAW TEST (TP Endpoint) ---
-        print("Running Raw Connection Test (TP)...")
-        raw_url = "https://api.shoonya.com/NorenWClientTP/QuickLogon"
+        # --- RAW TEST (Alternative Endpoint) ---
+        print("Running Raw Connection Test (Alternative)...")
+        raw_url = "https://shoonya.finvasia.com/NorenWClientTP/QuickLogon"
         payload = {
             "apkversion": "1.0.0",
             "uid": user_id,
             "pwd": os.getenv('PASSWORD'),
             "factor2": totp,
             "vc": os.getenv('VENDOR_CODE'),
-            "appkey": os.getenv('API_SECRET'), # This is usually the API Key from Prism
+            "appkey": os.getenv('API_SECRET'),
             "imei": os.getenv('IMEI'),
             "source": "API"
         }
         try:
-            # Note: Shoonya requires the payload to be prefixed with jData=
             raw_res = requests.post(raw_url, data=f"jData={json.dumps(payload)}", timeout=10)
             print(f"Raw HTTP Status: {raw_res.status_code}")
             print(f"Raw Response Text: {raw_res.text}")
