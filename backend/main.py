@@ -1,7 +1,8 @@
 import os
 import pyotp
 import asyncio
-import random
+import requests
+import json
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -47,7 +48,6 @@ loop = asyncio.get_event_loop()
 # Initialize Shoonya API
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
-        # Using the standard URL instead of the TP (Third Party) one
         NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClient/', websocket='wss://api.shoonya.com/NorenWSTP/')
 
 api = ShoonyaApiPy()
@@ -104,9 +104,29 @@ async def startup_event():
         totp = pyotp.TOTP(totp_secret).now()
         print(f"--- Debug: Attempting Login ---")
         print(f"User ID: {user_id}")
-        print(f"Vendor Code: {os.getenv('VENDOR_CODE')}")
-        print(f"TOTP: {totp}")
-        
+        print(f"TOTP Generated: {totp}")
+
+        # --- RAW TEST ---
+        print("Running Raw Connection Test...")
+        raw_url = "https://api.shoonya.com/NorenWClient/QuickLogon"
+        payload = {
+            "apkversion": "1.0.0",
+            "uid": user_id,
+            "pwd": os.getenv('PASSWORD'),
+            "factor2": totp,
+            "vc": os.getenv('VENDOR_CODE'),
+            "appkey": os.getenv('API_SECRET'),
+            "imei": os.getenv('IMEI'),
+            "source": "API"
+        }
+        try:
+            raw_res = requests.post(raw_url, data=f"jData={json.dumps(payload)}", timeout=10)
+            print(f"Raw HTTP Status: {raw_res.status_code}")
+            print(f"Raw Response Text: {raw_res.text}")
+        except Exception as re:
+            print(f"Raw Test Failed: {re}")
+        # ----------------
+
         ret = api.login(
             userid=user_id,
             password=os.getenv('PASSWORD'),
@@ -116,25 +136,25 @@ async def startup_event():
             imei=os.getenv('IMEI')
         )
         
-        print(f"Shoonya Response: {ret}")
+        print(f"Library Response: {ret}")
         
         if ret and isinstance(ret, dict) and ret.get('stat') == 'Ok':
             print("✅ Shoonya Login Successful!")
             api.is_connected = True
             api.start_websocket(order_update_callback=None, subscribe_callback=on_feed, socket_open_callback=on_open)
         else:
-            status = ret.get('stat') if isinstance(ret, dict) else 'Non-JSON Response'
-            print(f"❌ Login Failed. Status: {status}")
+            status = ret.get('stat') if isinstance(ret, dict) else 'Non-JSON'
+            print(f"❌ Library Login Failed. Status: {status}")
             api.is_connected = False
     except Exception as e:
-        print(f"❌ Login Error Exception: {e}")
+        print(f"❌ Critical Login Error: {e}")
         api.is_connected = False
 
 @app.get("/api/health")
 def health_check():
     if getattr(api, 'is_connected', False):
         return {"status": "Live Market Connected"}
-    return {"status": "Waiting for Login", "error": "Ensure credentials are correct in .env"}
+    return {"status": "Waiting for Login", "error": "Check server logs for details"}
 
 # --- WebSocket Route ---
 @app.websocket("/ws")
