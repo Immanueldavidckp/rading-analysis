@@ -47,7 +47,8 @@ loop = asyncio.get_event_loop()
 # Initialize Shoonya API
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
-        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/')
+        # Using the standard URL instead of the TP (Third Party) one
+        NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClient/', websocket='wss://api.shoonya.com/NorenWSTP/')
 
 api = ShoonyaApiPy()
 
